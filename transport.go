@@ -6,6 +6,7 @@ package catalogue
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sony/gobreaker"
 	"golang.org/x/net/context"
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	nrgorilla "github.com/newrelic/go-agent/v3/integrations/nrgorilla"
 )
 
 // MakeHTTPHandler mounts the endpoints into a REST-y HTTP handler.
@@ -28,6 +31,19 @@ func MakeHTTPHandler(ctx context.Context, e Endpoints, imagePath string, logger 
 		httptransport.ServerErrorLogger(logger),
 		httptransport.ServerErrorEncoder(encodeError),
 	}
+
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName(os.Getenv("NEW_RELIC_APP_NAME")),
+		newrelic.ConfigLicense(os.Getenv("NEW_RELIC_LICENSE_KEY")),
+		newrelic.ConfigDebugLogger(os.Stdout),
+	)
+
+	logger.Log("App Name", os.Getenv("NEW_RELIC_APP_NAME"))
+	logger.Log("Key", os.Getenv("NEW_RELIC_LICENSE_KEY"))
+
+	logger.Log(err)
+
+	r.Use(nrgorilla.Middleware(app))
 
 	// GET /catalogue       List
 	// GET /catalogue/size  Count

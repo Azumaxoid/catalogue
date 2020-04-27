@@ -18,6 +18,8 @@ RUN	addgroup -g ${SERVICE_GID} ${SERVICE_GROUP} && \
 	adduser -g "${SERVICE_NAME} user" -D -H -G ${SERVICE_GROUP} -s /sbin/nologin -u ${SERVICE_UID} ${SERVICE_USER} && \
 	apk add --update libcap
 
+RUN     apk add --no-cache --update ca-certificates
+
 WORKDIR /
 COPY --from=0 /app /app
 COPY images/ /images/
